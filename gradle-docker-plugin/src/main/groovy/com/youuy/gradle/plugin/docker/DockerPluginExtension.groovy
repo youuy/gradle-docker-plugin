@@ -80,11 +80,16 @@ class ContainerParameter {
     @Optional
     Property<String> entrypoint
 
+    @Input
+    @Optional
+    SetProperty<String> javaOpts
+
     @Inject
     ContainerParameter(ObjectFactory objectFactory) {
         ports = objectFactory.setProperty(Integer).empty()
         ports.set([8080])
         entrypoint = objectFactory.property(String.class)
         entrypoint.set("/entrypoint.sh")
+        javaOpts = objectFactory.setProperty(String).empty()
     }
 }

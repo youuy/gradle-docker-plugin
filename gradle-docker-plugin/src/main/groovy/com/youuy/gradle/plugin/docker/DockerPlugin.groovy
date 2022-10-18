@@ -79,7 +79,9 @@ class DockerPlugin implements Plugin<Project> {
                 //build
                 //1. delete last
                 File tmp = new File(context, ".tmp")
-                project.delete(tmp)
+                if (tmp.isDirectory()){
+                    throw new RuntimeException("There are currently tasks in progress...")
+                }
                 tmp.mkdirs()
                 File unjar = new File(project.buildDir, "unjar")
                 project.delete(unjar)
@@ -96,18 +98,23 @@ class DockerPlugin implements Plugin<Project> {
                     include "BOOT-INF/**", "META-INF/**"
                     into tmp.getPath()
                 }
-                //4. get Start-Class
+                //4. setup Start-Class and JAVA_OPTS
                 Manifest manifest = new Manifest(Files.newInputStream(new File(unjar, "META-INF/MANIFEST.MF").toPath()))
                 Attributes attr = manifest.getMainAttributes()
                 String startClass = attr.getValue("Start-Class")
                 File startClassFile = new File(tmp, "START_CLASS")
                 startClassFile.write(startClass)
 
-                if (!extension.to.image){
-                    throw new RuntimeException("The Parameter 'to.image' cannot be null")
+                def javaOpts = extension.container.javaOpts.getOrNull()
+                if (javaOpts){
+                    File javaOptsFile = new File(tmp, "JAVA_OPTS")
+                    javaOptsFile.write(javaOpts.join(" "))
                 }
 
                 //5. build
+                if (!extension.to.image){
+                    throw new RuntimeException("The Parameter 'to.image' cannot be null")
+                }
                 project.exec {
                     workingDir context
                     def tags = extension.to.tags ? extension.to.tags : null
@@ -148,6 +155,7 @@ class DockerPlugin implements Plugin<Project> {
                     println(commandArgs)
                     args commandArgs
                 }
+                project.delete(tmp)
             }
         }
 
@@ -163,14 +171,14 @@ class DockerPlugin implements Plugin<Project> {
     }
 
     String generateDockerfile(){
-        return """
-ARG BASE_IMAGE=openjdk:11-jre
+        return """ARG BASE_IMAGE=openjdk:11-jre
 FROM \$BASE_IMAGE
 ARG PORT=8080
 EXPOSE \$PORT
 WORKDIR /app
 COPY entrypoint.sh /app/entrypoint.sh
 COPY .tmp/START_CLASS /app/START_CLASS
+COPY .tmp/JAVA_OPTS /app/JAVA_OPTS
 COPY .tmp/BOOT-INF/lib /app/lib
 COPY .tmp/META-INF /app/META-INF
 COPY .tmp/BOOT-INF/classes /app
@@ -181,12 +189,12 @@ HEALTHCHECK --start-period=10s --interval=10s --timeout=3s --retries=5 \\
 """
     }
     String generateEntrypoint(){
-        return """
-#!/bin/sh
+        return """#!/bin/sh
 # check SPRING_PROFILES_ACTIVE environment variable
 [ -z "\$SPRING_PROFILES_ACTIVE" ] && echo "Error: Define SPRING_PROFILES_ACTIVE environment variable" && exit 1;
 # setup main class
 export START_CLASS=`cat /app/START_CLASS`
+export JAVA_OPTS=`cat /app/JAVA_OPTS`
 # startup
 java -XX:+UseContainerSupport \\
 -XX:InitialRAMPercentage=50 \\
@@ -196,6 +204,7 @@ java -XX:+UseContainerSupport \\
 -Dlog4j2.formatMsgNoLookups=true \\
 --add-opens=java.base/jdk.internal.loader=ALL-UNNAMED \\
 --add-opens=java.base/java.net=ALL-UNNAMED \\
+\$JAVA_OPTS \\
 -cp /app:/app/lib/* \$START_CLASS
 """
     }
