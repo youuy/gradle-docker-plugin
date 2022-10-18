@@ -112,7 +112,7 @@ class DockerPlugin implements Plugin<Project> {
                     workingDir context
                     def tags = extension.to.tags ? extension.to.tags : null
                     def commandArgs = ["build"]
-                    if (tags && tags.size() > 0) {
+                    if (tags.getOrNull()?.size() > 0) {
                         tags.get().each {tag ->
                             commandArgs << "-t"
                             commandArgs << "${extension.to.image.get()}:${tag}"
@@ -125,12 +125,12 @@ class DockerPlugin implements Plugin<Project> {
                     commandArgs << "${extension.to.image.get()}:latest"
 
                     def baseImage = extension.from.image ? extension.from.image : null
-                    if (baseImage){
+                    if (baseImage.getOrNull()){
                         commandArgs << "--build-arg"
                         commandArgs << "BASE_IMAGE=${baseImage.get()}"
                     }
                     def ports = extension.container.ports ? extension.container.ports : null
-                    if (ports && ports.size() > 0) {
+                    if (ports.getOrNull()?.size() > 0) {
                         String portsStr = ""
                         ports.get().each {item ->
                             if (portsStr.length() > 0){
@@ -165,9 +165,9 @@ class DockerPlugin implements Plugin<Project> {
     String generateDockerfile(){
         return """
 ARG BASE_IMAGE=openjdk:11-jre
-FROM $BASE_IMAGE
+FROM \$BASE_IMAGE
 ARG PORT=8080
-EXPOSE $PORT
+EXPOSE \$PORT
 WORKDIR /app
 COPY entrypoint.sh /app/entrypoint.sh
 COPY .tmp/START_CLASS /app/START_CLASS
@@ -176,7 +176,7 @@ COPY .tmp/META-INF /app/META-INF
 COPY .tmp/BOOT-INF/classes /app
 ENTRYPOINT ["/app/entrypoint.sh"]
 HEALTHCHECK --start-period=10s --interval=10s --timeout=3s --retries=5 \\
-            CMD curl --silent --fail --request GET http://localhost:$PORT/actuator/health \\
+            CMD curl --silent --fail --request GET http://localhost:\$PORT/actuator/health \\
                 | jq --exit-status '.status == "UP"' || exit 1
 """
     }
@@ -184,7 +184,7 @@ HEALTHCHECK --start-period=10s --interval=10s --timeout=3s --retries=5 \\
         return """
 #!/bin/sh
 # check SPRING_PROFILES_ACTIVE environment variable
-[ -z "$SPRING_PROFILES_ACTIVE" ] && echo "Error: Define SPRING_PROFILES_ACTIVE environment variable" && exit 1;
+[ -z "\$SPRING_PROFILES_ACTIVE" ] && echo "Error: Define SPRING_PROFILES_ACTIVE environment variable" && exit 1;
 # setup main class
 export START_CLASS=`cat /app/START_CLASS`
 # startup
@@ -196,7 +196,7 @@ java -XX:+UseContainerSupport \\
 -Dlog4j2.formatMsgNoLookups=true \\
 --add-opens=java.base/jdk.internal.loader=ALL-UNNAMED \\
 --add-opens=java.base/java.net=ALL-UNNAMED \\
--cp /app:/app/lib/* $START_CLASS
+-cp /app:/app/lib/* \$START_CLASS
 """
     }
 
