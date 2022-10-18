@@ -67,7 +67,6 @@ class ToParameter {
     ToParameter(ObjectFactory objectFactory) {
         image = objectFactory.property(String.class)
         tags = objectFactory.setProperty(String).empty()
-        tags.set(["latest"])
         context = objectFactory.property(String.class)
     }
 }
