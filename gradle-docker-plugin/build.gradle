@@ -6,7 +6,7 @@ plugins {
     id "com.gradle.plugin-publish" version "1.0.0"
 }
 group "com.youuy"
-version "2.0.6"
+version "2.0.7"
 repositories {
     mavenCentral()
 }

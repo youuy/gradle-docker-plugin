@@ -105,11 +105,9 @@ class DockerPlugin implements Plugin<Project> {
                 File startClassFile = new File(tmp, "START_CLASS")
                 startClassFile.write(startClass)
 
-                def javaOpts = extension.container.javaOpts.getOrNull()
-                if (javaOpts){
-                    File javaOptsFile = new File(tmp, "JAVA_OPTS")
-                    javaOptsFile.write(javaOpts.join(" "))
-                }
+                def javaOpts = extension.container.javaOpts.getOrElse(Collections.emptySet())
+                File javaOptsFile = new File(tmp, "JAVA_OPTS")
+                javaOptsFile.write(javaOpts.join(" "))
 
                 //5. build
                 if (!extension.to.image){
@@ -182,6 +180,7 @@ COPY .tmp/JAVA_OPTS /app/JAVA_OPTS
 COPY .tmp/BOOT-INF/lib /app/lib
 COPY .tmp/META-INF /app/META-INF
 COPY .tmp/BOOT-INF/classes /app
+RUN chmod +x /app/entrypoint.sh
 ENTRYPOINT ["/app/entrypoint.sh"]
 HEALTHCHECK --start-period=10s --interval=10s --timeout=3s --retries=5 \\
             CMD curl --silent --fail --request GET http://localhost:\$PORT/actuator/health \\
