@@ -1,4 +1,3 @@
-
 #!/bin/sh
 # check SPRING_PROFILES_ACTIVE environment variable
 [ -z "$SPRING_PROFILES_ACTIVE" ] && echo "Error: Define SPRING_PROFILES_ACTIVE environment variable" && exit 1;
