@@ -134,7 +134,7 @@ class DockerPlugin implements Plugin<Project> {
                         String portsStr = ""
                         ports.get().each {item ->
                             if (portsStr.length() > 0){
-                                portsStr += ","
+                                portsStr += " "
                             }
                             portsStr += String.valueOf(item)
                         }
