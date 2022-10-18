@@ -1,0 +1,50 @@
+buildscript {
+    repositories {
+        mavenLocal()
+        maven { url 'https://plugins.gradle.org/m2/' }
+    }
+    dependencies {
+        classpath "com.youuy:gradle-docker-plugin:1.0.0"
+    }
+}
+plugins {
+    id 'java'
+    id 'java-library'
+    id 'maven-publish'
+    id 'idea'
+    id 'org.springframework.boot' version "2.3.7.RELEASE"
+    id 'io.spring.dependency-management' version '1.0.11.RELEASE'
+}
+apply plugin: "com.youuy.gradle-docker-plugin"
+version "1.0.0"
+tasks.withType(JavaCompile) {
+    options.encoding = "UTF-8"
+}
+repositories {
+    mavenCentral()
+    maven { url 'https://repo.spring.io/release' }
+}
+jar {
+    enabled = true
+}
+bootJar {
+    launchScript()
+    enabled = true
+}
+dependencies {
+    implementation("org.springframework.boot:spring-boot-starter")
+    testImplementation('org.springframework.boot:spring-boot-starter-test')
+}
+docker {
+    from {
+        image = "youuy/openjdk:11"
+    }
+    to {
+        image = "youuy/test"
+        tags = ["1.1.1"]
+    }
+    container {
+        ports = [9939]
+        entrypoint = "/entrypoint.sh"
+    }
+}

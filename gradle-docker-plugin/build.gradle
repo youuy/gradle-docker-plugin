@@ -1,0 +1,45 @@
+
+plugins {
+    id 'java-gradle-plugin'
+    id 'maven'
+    id 'groovy'
+    id 'maven-publish'
+    id "com.gradle.plugin-publish" version "1.0.0"
+}
+group "com.youuy"
+version "1.0.0"
+repositories {
+    mavenCentral()
+}
+dependencies {
+    //Groovy DSL
+    implementation gradleApi()
+    //Gradle DSL
+    implementation localGroovy()
+}
+pluginBundle {
+    website = 'https://youuy/'
+    vcsUrl = 'https://github.com/youuy/gradle-docker-plugin'
+    tags = ['docker']
+}
+gradlePlugin {
+    plugins {
+        greeting {
+            id = 'com.youuy.gradle-docker-plugin'
+            displayName = 'Gradle Docker Plugin'
+            description = 'Package the Docker image of the Spring boot application through Gradle.'
+            implementationClass = 'com.youuy.gradle.plugin.docker.DockerPlugin'
+        }
+    }
+}
+
+publishing {
+    publications {
+        pluginPublication (MavenPublication) {
+            from       components.java
+            groupId    project.group
+            artifactId "gradle-docker-plugin"
+            version    project.version
+        }
+    }
+}
