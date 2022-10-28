@@ -84,6 +84,10 @@ class ContainerParameter {
     @Optional
     SetProperty<String> javaOpts
 
+    @Input
+    @Optional
+    Property<String> healthCheckPort
+
     @Inject
     ContainerParameter(ObjectFactory objectFactory) {
         ports = objectFactory.setProperty(Integer).empty()
@@ -91,5 +95,6 @@ class ContainerParameter {
         entrypoint = objectFactory.property(String.class)
         entrypoint.set("/entrypoint.sh")
         javaOpts = objectFactory.setProperty(String).empty()
+        healthCheckPort = objectFactory.property(String.class)
     }
 }

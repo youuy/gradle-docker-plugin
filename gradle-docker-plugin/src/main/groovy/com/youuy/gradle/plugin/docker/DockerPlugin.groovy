@@ -172,6 +172,8 @@ class DockerPlugin implements Plugin<Project> {
         return """ARG BASE_IMAGE=openjdk:11-jre
 FROM \$BASE_IMAGE
 ARG PORT=8080
+ARG HEALTHCHECK_PORT=8080
+ENV HEALTHCHECK_PORT=\${HEALTHCHECK_PORT}
 EXPOSE \$PORT
 WORKDIR /app
 COPY entrypoint.sh /app/entrypoint.sh
@@ -183,7 +185,7 @@ COPY .tmp/BOOT-INF/classes /app
 RUN chmod +x /app/entrypoint.sh
 ENTRYPOINT ["/app/entrypoint.sh"]
 HEALTHCHECK --start-period=10s --interval=10s --timeout=3s --retries=5 \\
-            CMD curl --silent --fail --request GET http://localhost:\$PORT/actuator/health \\
+            CMD curl --silent --fail --request GET http://localhost:\$HEALTHCHECK_PORT/actuator/health \\
                 | jq --exit-status '.status == "UP"' || exit 1
 """
     }
