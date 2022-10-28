@@ -134,6 +134,7 @@ class DockerPlugin implements Plugin<Project> {
                         commandArgs << "--build-arg"
                         commandArgs << "BASE_IMAGE=${baseImage.get()}"
                     }
+                    def healthCheckPort = extension.container.healthCheckPort ? extension.container.healthCheckPort : null
                     def ports = extension.container.ports ? extension.container.ports : null
                     if (ports.getOrNull()?.size() > 0) {
                         String portsStr = ""
@@ -145,7 +146,16 @@ class DockerPlugin implements Plugin<Project> {
                         }
                         commandArgs << "--build-arg"
                         commandArgs << "PORT=${portsStr}"
+
+                        if (!healthCheckPort.getOrNull()){
+                            healthCheckPort.set(ports.get()[0].toString())
+                        }
                     }
+                    if (healthCheckPort.isPresent()){
+                        commandArgs << "--build-arg"
+                        commandArgs << "HEALTHCHECK_PORT=${healthCheckPort.get()}"
+                    }
+
                     commandArgs << "--no-cache"
                     commandArgs << "."
 
@@ -185,8 +195,8 @@ COPY .tmp/BOOT-INF/classes /app
 RUN chmod +x /app/entrypoint.sh
 ENTRYPOINT ["/app/entrypoint.sh"]
 HEALTHCHECK --start-period=10s --interval=10s --timeout=3s --retries=5 \\
-            CMD curl --silent --fail --request GET http://localhost:\$HEALTHCHECK_PORT/actuator/health \\
-                | jq --exit-status '.status == "UP"' || exit 1
+            CMD curl -m 5 --silent --fail --request GET http://localhost:\$HEALTHCHECK_PORT/actuator/health \\
+            | jq --exit-status -n 'inputs | if has("status") then .status=="UP" else false end' > /dev/null || exit 1
 """
     }
     String generateEntrypoint(){
