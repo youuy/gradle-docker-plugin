@@ -185,9 +185,6 @@ class DockerPlugin implements Plugin<Project> {
                         println(commandArgs)
                         args commandArgs
                     }
-                }catch(e){
-                    e.printStackTrace()
-
                 }finally{
                     if (tmp){
                         project.delete(tmp)
