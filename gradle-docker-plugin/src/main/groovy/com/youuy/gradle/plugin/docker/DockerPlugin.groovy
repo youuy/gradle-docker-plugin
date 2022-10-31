@@ -76,6 +76,9 @@ class DockerPlugin implements Plugin<Project> {
                     File entrypoint = new File(contextFolder, "entrypoint.sh")
                     entrypoint.write(generateEntrypoint())
                 }
+                //check mode
+                def buildXEnabled = extension.buildX.enabled.getOrElse(false)
+
                 //build
                 //1. delete last
                 File tmp = new File(context, ".tmp")
@@ -115,10 +118,28 @@ class DockerPlugin implements Plugin<Project> {
                 }
                 project.exec {
                     workingDir context
-                    def tags = extension.to.tags ? extension.to.tags : null
-                    def commandArgs = ["build"]
-                    if (tags.getOrNull()?.size() > 0) {
-                        tags.get().each {tag ->
+                    def tags = extension.to.tags.getOrNull()
+                    def commandArgs = []
+
+                    if (buildXEnabled){
+                        commandArgs << "buildx build"
+
+                        def buildXAutoPush = extension.buildX.autoPush.getOrElse(false)
+                        if (buildXAutoPush){
+                            commandArgs << "--push]"
+                        }
+                        def platforms = extension.buildX.platforms.getOrNull()
+                        if (platforms?.size()> 0){
+                            platforms?.each {platform->
+                                commandArgs << "--platform="
+                                commandArgs << platform
+                            }
+                        }
+                    }else{
+                        commandArgs << "build"
+                    }
+                    if (tags?.size() > 0) {
+                        tags.each {tag ->
                             commandArgs << "-t"
                             commandArgs << "${extension.to.image.get()}:${tag}"
                         }
@@ -129,16 +150,16 @@ class DockerPlugin implements Plugin<Project> {
                     commandArgs << "-t"
                     commandArgs << "${extension.to.image.get()}:latest"
 
-                    def baseImage = extension.from.image ? extension.from.image : null
-                    if (baseImage.getOrNull()){
+                    def baseImage = extension.from.image.getOrNull()
+                    if (baseImage){
                         commandArgs << "--build-arg"
                         commandArgs << "BASE_IMAGE=${baseImage.get()}"
                     }
-                    def healthCheckPort = extension.container.healthCheckPort ? extension.container.healthCheckPort : null
-                    def ports = extension.container.ports ? extension.container.ports : null
-                    if (ports.getOrNull()?.size() > 0) {
+                    def healthCheckPort = extension.container.healthCheckPort.getOrNull()
+                    def ports = extension.container.ports.getOrNull()
+                    if (ports?.size() > 0) {
                         String portsStr = ""
-                        ports.get().each {item ->
+                        ports.each {item ->
                             if (portsStr.length() > 0){
                                 portsStr += " "
                             }
@@ -147,11 +168,11 @@ class DockerPlugin implements Plugin<Project> {
                         commandArgs << "--build-arg"
                         commandArgs << "PORT=${portsStr}"
 
-                        if (!healthCheckPort.getOrNull()){
-                            healthCheckPort.set(ports.get()[0].toString())
+                        if (!healthCheckPort){
+                            healthCheckPort = ports[0].toString()
                         }
                     }
-                    if (healthCheckPort.isPresent()){
+                    if (healthCheckPort){
                         commandArgs << "--build-arg"
                         commandArgs << "HEALTHCHECK_PORT=${healthCheckPort.get()}"
                     }

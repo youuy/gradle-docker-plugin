@@ -16,13 +16,14 @@ class DockerPluginExtension {
     FromParameter from
     ToParameter to
     ContainerParameter container
-
+    BuildXParameter buildX
     @Inject
     DockerPluginExtension(Project project) {
         ObjectFactory factory = project.getObjects()
         from = factory.newInstance(FromParameter.class)
         to = factory.newInstance(ToParameter.class)
         container = factory.newInstance(ContainerParameter.class)
+        buildX = factory.newInstance(BuildXParameter.class)
     }
 
     public void from(Action<? super FromParameter> action) {
@@ -35,6 +36,9 @@ class DockerPluginExtension {
 
     public void container(Action<? super ContainerParameter> action) {
         action.execute(container);
+    }
+    public void buildX(Action<? super BuildXParameter> action) {
+        action.execute(buildX);
     }
 }
 
@@ -96,5 +100,39 @@ class ContainerParameter {
         entrypoint.set("/entrypoint.sh")
         javaOpts = objectFactory.setProperty(String).empty()
         healthCheckPort = objectFactory.property(String.class)
+    }
+}
+
+@CompileStatic
+class BuildXParameter {
+    @Input
+    @Optional
+    Property<Boolean> enabled
+
+    @Input
+    @Optional
+    Property<Boolean> autoPush
+
+    /**
+     * platform list
+     *
+     * linux/386
+     * linux/amd64
+     * linux/arm/v6
+     * linux/arm/v7
+     * linux/arm64/v8
+     * linux/ppc64le
+     * linux/s390x
+     */
+    @Input
+    @Optional
+    SetProperty<String> platforms
+    @Inject
+    BuildXParameter(ObjectFactory objectFactory) {
+        enabled = objectFactory.property(Boolean.class)
+        enabled.set(false)
+        autoPush = objectFactory.property(Boolean.class)
+        autoPush.set(false)
+        platforms = objectFactory.setProperty(String).empty()
     }
 }
