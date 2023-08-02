@@ -145,12 +145,13 @@ class DockerPlugin implements Plugin<Project> {
                                 commandArgs << "-t"
                                 commandArgs << "${extension.to.image.get()}:${tag}"
                             }
+                        }else{
+                            //默认添加一个latest
+                            commandArgs << "-t"
+                            commandArgs << "${extension.to.image.get()}:latest"
                         }
                         commandArgs << "-t"
                         commandArgs << "${extension.to.image.get()}:${project.version}"
-
-                        commandArgs << "-t"
-                        commandArgs << "${extension.to.image.get()}:latest"
 
                         def baseImage = extension.from.image.getOrNull()
                         if (baseImage){

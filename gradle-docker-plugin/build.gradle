@@ -6,7 +6,7 @@ plugins {
     id "com.gradle.plugin-publish" version "1.0.0"
 }
 group "com.youuy"
-version "2.0.10"
+version "2.0.11"
 repositories {
     mavenCentral()
 }
@@ -23,7 +23,7 @@ pluginBundle {
 }
 gradlePlugin {
     plugins {
-        docker {
+        gradleDockerPlugin {
             id = 'com.youuy.gradle-docker-plugin'
             displayName = 'Gradle Docker Plugin'
             description = 'Package the Docker image of the Spring boot application through Gradle.'
