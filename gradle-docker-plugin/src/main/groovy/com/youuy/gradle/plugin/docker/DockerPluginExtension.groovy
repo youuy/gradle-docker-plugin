@@ -90,7 +90,7 @@ class ContainerParameter {
 
     @Input
     @Optional
-    Property<String> healthCheckPort
+    Property<Integer> healthCheckPort
 
     @Inject
     ContainerParameter(ObjectFactory objectFactory) {
@@ -99,7 +99,9 @@ class ContainerParameter {
         entrypoint = objectFactory.property(String.class)
         entrypoint.set("/entrypoint.sh")
         javaOpts = objectFactory.setProperty(String).empty()
-        healthCheckPort = objectFactory.property(String.class)
+        healthCheckPort = objectFactory.property(Integer.class)
+
+        healthCheckPort.set(ports.iterator().next() as Integer)
     }
 }
 

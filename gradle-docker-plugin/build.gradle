@@ -1,12 +1,22 @@
 plugins {
     id 'java-gradle-plugin'
     id 'maven'
+    id 'java'
     id 'groovy'
+    id 'idea'
     id 'maven-publish'
     id "com.gradle.plugin-publish" version "1.0.0"
 }
 group "com.youuy"
-version "2.0.11"
+version "2.0.14"
+
+sourceCompatibility = JavaVersion.VERSION_11
+targetCompatibility = JavaVersion.VERSION_11
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = "UTF-8"
+}
+
 repositories {
     mavenCentral()
 }
@@ -28,30 +38,6 @@ gradlePlugin {
             displayName = 'Gradle Docker Plugin'
             description = 'Package the Docker image of the Spring boot application through Gradle.'
             implementationClass = 'com.youuy.gradle.plugin.docker.DockerPlugin'
-        }
-    }
-}
-
-publishing {
-    publications {
-        pluginPublication (MavenPublication) {
-            from       components.java
-            groupId    project.group
-            artifactId "gradle-docker-plugin"
-            version    project.version
-        }
-    }
-    repositories {
-        maven {
-            name 'GitLab'
-            url "https://git.codeislands.xyz/api/v4/projects/209/packages/maven"
-            credentials(HttpHeaderCredentials) {
-                name = 'Private-Token'
-                value = gitLabPrivateToken
-            }
-            authentication {
-                header(HttpHeaderAuthentication)
-            }
         }
     }
 }
