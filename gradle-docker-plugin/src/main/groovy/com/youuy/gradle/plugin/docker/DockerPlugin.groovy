@@ -172,7 +172,7 @@ class DockerPlugin implements Plugin<Project> {
                             commandArgs << "PORT=${portsStr}"
 
                             if (!healthCheckPort){
-                                healthCheckPort = ports[0].toString()
+                                healthCheckPort = ports[0]
                             }
                         }
                         if (healthCheckPort){

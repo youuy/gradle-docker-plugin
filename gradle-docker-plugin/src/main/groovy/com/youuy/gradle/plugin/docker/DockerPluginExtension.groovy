@@ -100,8 +100,6 @@ class ContainerParameter {
         entrypoint.set("/entrypoint.sh")
         javaOpts = objectFactory.setProperty(String).empty()
         healthCheckPort = objectFactory.property(Integer.class)
-
-        healthCheckPort.set(ports.iterator().next() as Integer)
     }
 }
 
